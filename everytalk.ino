@@ -34,11 +34,6 @@
 #define HRES      320
 #define VRES      480
 
-int xPerTouch = ( HMAX - HMIN ) / HRES; // X
-int yPerTouch = ( VMAX - VMIN ) / VRES; // Y
-uint8_t currentMenu = 0; // Main menu
-bool isCalibrated = 0;
-
 TinyGPS gps;
 ILI9488 tft = ILI9488(TFT_CS, TFT_DC, TFT_RST);
 TFT_Touch touch = TFT_Touch(DCS, DCLK, DIN, DOUT);
@@ -46,9 +41,10 @@ TFT_Touch touch = TFT_Touch(DCS, DCLK, DIN, DOUT);
 void setup() {
   Serial3.begin(9600); // Allocate UART3 for GPS.
   Serial2.begin(19200); // Allocate UART2 for Iridium transceiver.
+  Serial.begin(9600);
   tft.begin();
   tft.setRotation(4);
-  touch.setCal(HMIN, HMAX, VMIN, VMAX, HRES, VRES, XYSWAP); // Raw xmin, xmax, ymin, ymax, width, height
+  //touch.setCal(HMIN, HMAX, VMIN, VMAX, HRES, VRES, XYSWAP); // Raw xmin, xmax, ymin, ymax, width, height
   touch.setRotation(1);
   pinMode(TFT_BL, OUTPUT);
   tft.fillScreen(ILI9488_BLACK);
@@ -61,31 +57,27 @@ void setup() {
 }
 
 void loop(void) {
-  caliScr();
+  touchTest();
 }
 
-unsigned long caliScr() {
-  unsigned int X1_Raw;
-  unsigned int Y1_Raw;
-
-    tft.drawFastHLine(10, VRES - 20, 20, ILI9488_RED); // x=20, y=460
-    tft.drawFastVLine(20, VRES - 30, 20, ILI9488_RED);
-
-    tft.drawFastHLine(HRES - 30, 20, 20, ILI9488_RED); // x=300, y=20
-    tft.drawFastVLine(HRES - 20, 10, 20, ILI9488_RED);
+unsigned long touchTest() {
+  float X_Raw;
+  float Y_Raw;
+  float Xm = 0.085106;
+  float Xc = 8.31656;
+  float Ym = -0.13142;
+  float Yc = 518.87694;
+  uint16_t Xpx;
+  uint16_t Ypx;
 
   while (touch.Pressed()) // Note this function updates coordinates stored within library variables
   {
-    X1_Raw = touch.RawX();
-    Y1_Raw = touch.RawY(); // #1 Raw TS value, (20, 20)
+    X_Raw = touch.RawX();
+    Y_Raw = touch.RawY();
 
-    tft.setCursor(1, 20);
-    tft.fillScreen(0xFFFF);
-    tft.setTextColor(ILI9488_BLACK);
-    tft.print(X1_Raw);
-    tft.print(", ");
-    tft.print(Y1_Raw);
-
-    delay(10);
+    Xpx = ((Xm * X_Raw) - Xc);
+    Ypx = ((Ym * Y_Raw) + Yc);
+    
+    tft.drawPixel(Xpx, Ypx, ILI9488_RED);
   }
 }
