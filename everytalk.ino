@@ -4,11 +4,11 @@
 #include <TFT_Touch.h>
 #include <Adafruit_GFX.h>
 #include <HardwareSerial.h>
-#include <MapleFreeRTOS821.h>
+#include <MapleFreeRTOS900.h>
 #include <Fonts/FreeSans12pt7b.h>
 #include <Fonts/FreeSans18pt7b.h>
 
-// ILI9488 pin allocation
+// ILI9488 pin allocations
 #define TFT_DC    PA2
 #define TFT_CS    PA0
 #define TFT_RST   PA1
@@ -17,22 +17,28 @@
 #define TFT_MOSI  PA7
 #define TFT_BL    PB8
 
-// XPT2046 pin allocation
+// XPT2046 pin allocations
 #define DOUT      PB12
 #define DIN       PB13
 #define DCS       PA9
 #define DCLK      PA8
 
-// Range of TS coordinate value (Raw) : 0 ~ 4095
-#define HMIN      220 // Horizontal
+// Range of TS value : 0 ~ 4095 (Raw)
+#define HMIN      220
 #define HMAX      3875
-#define VMIN      250 // Vertical
+#define VMIN      250
 #define VMAX      3947
 #define XYSWAP    0
 
-// LCD resolution definition
+// LCD resolution
 #define HRES      320
 #define VRES      480
+
+// Touch constants
+#define TS_XM     0.08510
+#define TS_XC     14.31656
+#define TS_YM     -0.13142
+#define TS_YC     518.87694
 
 TinyGPS gps;
 ILI9488 tft = ILI9488(TFT_CS, TFT_DC, TFT_RST);
@@ -44,7 +50,6 @@ void setup() {
   Serial.begin(9600);
   tft.begin();
   tft.setRotation(4);
-  //touch.setCal(HMIN, HMAX, VMIN, VMAX, HRES, VRES, XYSWAP); // Raw xmin, xmax, ymin, ymax, width, height
   touch.setRotation(1);
   pinMode(TFT_BL, OUTPUT);
   tft.fillScreen(ILI9488_BLACK);
@@ -63,10 +68,6 @@ void loop(void) {
 unsigned long touchTest() {
   float X_Raw;
   float Y_Raw;
-  float Xm = 0.085106;
-  float Xc = 8.31656;
-  float Ym = -0.13142;
-  float Yc = 518.87694;
   uint16_t Xpx;
   uint16_t Ypx;
 
@@ -75,8 +76,14 @@ unsigned long touchTest() {
     X_Raw = touch.RawX();
     Y_Raw = touch.RawY();
 
-    Xpx = ((Xm * X_Raw) - Xc);
-    Ypx = ((Ym * Y_Raw) + Yc);
+    Xpx = ((TS_XM * X_Raw) - TS_XC);
+    Ypx = ((TS_YM * Y_Raw) + TS_YC);
+
+    if (2048.0 < Y_Raw) {
+      Ypx = Ypx + ((239 - Ypx) * 0.016736);
+      } else if (Y_Raw < 2048.0) {
+      Ypx = Ypx - (Ypx * 0.02092);
+      }
     
     tft.drawPixel(Xpx, Ypx, ILI9488_RED);
   }
