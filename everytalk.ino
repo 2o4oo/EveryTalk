@@ -1,3 +1,4 @@
+// EveryTalk Project - Main
 #include "SPI.h"
 #include <TinyGPS.h>
 #include <ILI9488.h>
@@ -22,13 +23,6 @@
 #define DIN       PB13
 #define DCS       PA9
 #define DCLK      PA8
-
-// Range of TS value : 0 ~ 4095 (Raw)
-#define HMIN      220
-#define HMAX      3875
-#define VMIN      250
-#define VMAX      3947
-#define XYSWAP    0
 
 // LCD resolution
 #define HRES      320
@@ -59,32 +53,4 @@ void setup() {
   tft.setFont(); tft.setCursor(122, 460); tft.print("made by L0G1C");
   tft.setFont(&FreeSans12pt7b);
   digitalWrite(TFT_BL, HIGH);
-}
-
-void loop(void) {
-  touchTest();
-}
-
-unsigned long touchTest() {
-  float X_Raw;
-  float Y_Raw;
-  uint16_t Xpx;
-  uint16_t Ypx;
-
-  while (touch.Pressed()) // Note this function updates coordinates stored within library variables
-  {
-    X_Raw = touch.RawX();
-    Y_Raw = touch.RawY();
-
-    Xpx = ((TS_XM * X_Raw) - TS_XC);
-    Ypx = ((TS_YM * Y_Raw) + TS_YC);
-
-    if (2048.0 < Y_Raw) {
-      Ypx = Ypx + ((239 - Ypx) * 0.016736);
-      } else if (Y_Raw < 2048.0) {
-      Ypx = Ypx - (Ypx * 0.02092);
-      }
-    
-    tft.drawPixel(Xpx, Ypx, ILI9488_RED);
   }
-}
