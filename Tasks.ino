@@ -25,6 +25,6 @@ static void touchManager(void *pvParameters) {
       Y_px = Y_px - (Y_px * 0.02092);
       }
    }
-   // Return screen coordinates..
+   // Return screen coordinates...
   }
 }
