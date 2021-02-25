@@ -24,6 +24,6 @@ static void tsMgr(void *params) {
     tsLoc.X_Scr = X_px;
     tsLoc.Y_Scr = Y_px;
     xQueueSend(touchData, &tsLoc, 0);
-    Serial3.println("[tsMgr] Queue has sent.");
+    Serial3.println("Sent");
    }
   }
